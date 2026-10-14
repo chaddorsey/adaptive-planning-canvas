@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Adaptive Planning Canvas — Concord Consortium 2026</title>
+
+<!--
+  ============================================================
+  FONTS
+  ------------------------------------------------------------
+  Museo / Museo Sans are licensed fonts. This file looks for them
+  in three places, in order:
+    1. Locally installed copies on the viewer's machine (@font-face local())
+    2. An Adobe Fonts (Typekit) kit — paste your kit <link> below
+    3. A public CDN copy (fallback link below)
+  If none resolve, it degrades to Rockwell/Roboto Slab (display)
+  and Avenir/system sans (body), which keep the same feel.
+  ============================================================
+-->
+<!-- 1) If Concord has an Adobe Fonts kit with Museo + Museo Sans, paste it here: -->
+<!-- <link rel="stylesheet" href="https://use.typekit.net/XXXXXXX.css"> -->
+<!-- 2) Public CDN fallback -->
+<link rel="stylesheet" href="https://fonts.cdnfonts.com/css/museo-sans">
+<link rel="stylesheet" href="https://fonts.cdnfonts.com/css/museo">
+
+<style>
+/* ============================================================
+   LOCAL FONT BINDING — picks up desktop-installed Museo families
+   ============================================================ */
+@font-face { font-family:'Museo CC'; src: local('Museo 300'), local('Museo-300'); font-weight:300; font-display:swap; }
+@font-face { font-family:'Museo CC'; src: local('Museo 500'), local('Museo-500'); font-weight:500; font-display:swap; }
+@font-face { font-family:'Museo CC'; src: local('Museo 700'), local('Museo-700'); font-weight:700; font-display:swap; }
+@font-face { font-family:'Museo CC'; src: local('Museo 900'), local('Museo-900'); font-weight:900; font-display:swap; }
+
+@font-face { font-family:'Museo Sans CC'; src: local('Museo Sans 300'), local('MuseoSans-300'); font-weight:300; font-display:swap; }
+@font-face { font-family:'Museo Sans CC'; src: local('Museo Sans 500'), local('MuseoSans-500'); font-weight:500; font-display:swap; }
+@font-face { font-family:'Museo Sans CC'; src: local('Museo Sans 700'), local('MuseoSans-700'); font-weight:700; font-display:swap; }
+@font-face { font-family:'Museo Sans CC'; src: local('Museo Sans 900'), local('MuseoSans-900'); font-weight:900; font-display:swap; }
+
+/* ============================================================
+   DESIGN TOKENS — Concord Consortium brand palette (Style Guide 6.0)
+   Tweak here to restyle the whole canvas.
+   ============================================================ */
+:root{
+  /* Brand palette */
+  --cc-orange:      #e86e2f;  /* PMS 166 C  */
+  --cc-lightblue:   #6ec4d7;  /* PMS 631 C  */
+  --cc-blue:        #0093b0;  /* PMS 3145 C */
+  --cc-green:       #2da343;  /* PMS 362 C  */
+  --cc-yellow:      #ffc222;  /* PMS 130 C  */
+  --cc-mint:        #c9e9e6;  /* PMS 629 C  */
+  --cc-sand:        #ffe4af;  /* PMS 134 C  */
+  --cc-cream:       #f6ecdc;  /* PMS 468 C  */
+  --cc-rust:        #b55414;  /* PMS 1675 C */
+
+  /* Neutrals */
+  --ink:            #241a12;
+  --ink-soft:       #57493d;
+  --ink-mute:       #8b7d70;
+  --rule:           #ddcfbe;
+  --card:           #ffffff;
+
+  /* Canvas */
+  --bg:             var(--cc-cream);
+  --bg-accent:      var(--cc-orange);
+
+  /* Type */
+  --font-display: 'Museo CC','Museo','museo-slab','Museo Slab','Rockwell','Roboto Slab',Georgia,serif;
+  --font-body:    'Museo Sans CC','Museo Sans','museo-sans','MuseoSans','Avenir Next',Avenir,'Segoe UI',system-ui,-apple-system,sans-serif;
+
+  /* Geometry */
+  --radius: 3px;
+  --gap: 18px;
+  --maxw: 1440px;
+  --shadow: 0 1px 2px rgba(36,26,18,.06), 0 6px 18px rgba(36,26,18,.05);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*,*::before,*::after{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  padding:0 0 72px;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-weight:300;
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.canvas{ max-width:var(--maxw); margin:0 auto; padding:0 32px; }
+
+/* Shared label style — the small letterspaced caps used throughout NOBL's canvas */
+.label{
+  font-family:var(--font-body);
+  font-weight:700;
+  font-size:11.5px;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  line-height:1.25;
+}
+.sublabel{
+  font-size:12.5px;
+  color:var(--ink-soft);
+  font-weight:300;
+  line-height:1.45;
+}
+
+/* ============================================================
+   TOOLBAR (screen only)
+   ============================================================ */
+.toolbar{
+  position:sticky; top:0; z-index:50;
+  background:rgba(246,236,220,.92);
+  backdrop-filter:saturate(140%) blur(8px);
+  border-bottom:1px solid var(--rule);
+  margin-bottom:28px;
+}
+.toolbar-inner{
+  max-width:var(--maxw); margin:0 auto; padding:9px 32px;
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.brandmark{
+  font-family:var(--font-display); font-weight:700; font-size:14px;
+  letter-spacing:.02em; color:var(--ink); margin-right:auto;
+}
+.brandmark span{ color:var(--cc-orange); }
+.btn{
+  font-family:var(--font-body); font-weight:700;
+  font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+  padding:7px 14px; border-radius:999px; cursor:pointer;
+  border:1.5px solid var(--ink); background:transparent; color:var(--ink);
+  transition:background .15s ease,color .15s ease,border-color .15s ease;
+}
+.btn:hover{ background:var(--ink); color:var(--bg); }
+.btn[aria-pressed="true"]{ background:var(--cc-orange); border-color:var(--cc-orange); color:#fff; }
+.segmented{ display:inline-flex; border:1.5px solid var(--ink); border-radius:999px; overflow:hidden; }
+.segmented .btn.seg{ border:0; border-radius:0; padding:7px 15px; }
+.segmented .btn.seg + .btn.seg{ border-left:1.5px solid var(--ink); }
+.segmented .btn.seg[aria-pressed="true"]{ background:var(--ink); color:var(--bg); }
+.segmented .btn.seg[aria-pressed="true"]:hover{ background:var(--ink); }
+.hint{ font-size:11.5px; color:var(--ink-mute); }
+body.editing [data-edit]{ outline:1px dashed rgba(232,110,47,.55); outline-offset:3px; border-radius:2px; }
+body.editing [data-edit]:focus{ outline:2px solid var(--cc-orange); background:#fffdf8; }
+
+/* ============================================================
+   MASTHEAD
+   ============================================================ */
+.masthead{ text-align:center; padding:14px 0 30px; }
+.masthead h1{
+  font-family:var(--font-display); font-weight:900;
+  font-size:clamp(30px,4.2vw,50px); line-height:1.05;
+  margin:0 0 10px; letter-spacing:-.005em;
+}
+.masthead .org{
+  font-family:var(--font-body); font-weight:700;
+  font-size:12px; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--cc-orange);
+}
+.masthead .meta{ margin-top:9px; font-size:13px; color:var(--ink-mute); }
+
+/* ============================================================
+   CARD PRIMITIVE
+   ============================================================ */
+.card{
+  background:var(--card);
+  border:1px solid var(--rule);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:16px 20px;
+}
+.card > .label{ display:block; text-align:center; margin-bottom:7px; }
+
+/* ============================================================
+   THE HOUSE — Creed roof + Vision base
+   ============================================================ */
+.house{ margin-bottom:var(--gap); }
+.roof{ position:relative; width:86%; margin:0 auto; }
+.roof svg{ display:block; width:100%; height:170px; }
+.roof svg polygon{ fill:var(--card); stroke:var(--rule); stroke-width:1; vector-effect:non-scaling-stroke; }
+.roof-content{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+  text-align:center; padding:0 16% 18px;
+}
+.roof-content .label{ margin-bottom:7px; }
+.creed-text{
+  font-family:var(--font-display); font-weight:500;
+  font-size:clamp(15px,1.5vw,20px); line-height:1.35; max-width:44ch;
+  text-wrap:balance;
+}
+.vision{ text-align:center; }
+.vision p{ margin:0 auto; max-width:96ch; font-size:15.5px; line-height:1.5; color:var(--ink-soft); }
+
+/* ============================================================
+   3-YEAR MISSION
+   ============================================================ */
+.mission-head{ position:relative; text-align:center; margin:34px 0 0; }
+.mission-head .label{
+  position:absolute; top:-7px; left:50%; transform:translateX(-50%); z-index:2;
+  background:var(--bg); padding:0 16px; white-space:nowrap;
+}
+.bracket{
+  height:22px; margin:0 16.66%;
+  border-top:1px solid var(--rule);
+  border-left:1px solid var(--rule);
+  border-right:1px solid var(--rule);
+}
+.mission-grid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:var(--gap);
+}
+.mission-grid .card{ text-align:center; }
+.mission-grid p{ margin:0; color:var(--ink-soft); font-size:14.5px; }
+
+/* ============================================================
+   SCORECARD
+   ============================================================ */
+.scorecard{ margin-top:var(--gap); }
+.scorecard .sublabel{ text-align:center; margin-bottom:12px; }
+.scorecard ul{
+  columns:3; column-gap:34px; margin:0; padding:0; list-style:none;
+}
+.scorecard li{
+  break-inside:avoid; position:relative;
+  padding:5px 0 5px 20px; font-size:14px; color:var(--ink-soft);
+  border-bottom:1px solid #f0e7db;
+}
+.scorecard li::before{
+  content:""; position:absolute; left:2px; top:12px;
+  width:7px; height:7px; border-radius:50%; background:var(--cc-orange);
+}
+
+/* ============================================================
+   STRATEGIC THEMES
+   ============================================================ */
+.themes-head{ text-align:center; margin:46px 0 22px; }
+.themes-head .label{ font-size:13px; letter-spacing:.18em; display:block; margin-bottom:8px; }
+.themes-head .sublabel{ max-width:74ch; margin:0 auto; }
+
+.themes{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:var(--gap);
+  align-items:start;
+}
+
+.theme{ display:flex; flex-direction:column; gap:var(--gap); }
+
+/* Align equivalent blocks across every theme column, canvas-style.
+   Falls back to independent (ragged) columns where subgrid is unsupported. */
+@supports (grid-template-rows: subgrid){
+  @media (min-width:861px){
+    .themes{ grid-template-rows:repeat(6,auto); align-items:stretch; }
+    .theme{
+      display:grid; grid-row:span 6; grid-template-rows:subgrid; gap:var(--gap);
+    }
+    .theme > *{ align-self:stretch; }
+  }
+}
+.theme-head{
+  background:var(--accent); color:var(--accent-ink,#fff);
+  border-radius:var(--radius); padding:14px 16px 15px; text-align:center;
+  box-shadow:var(--shadow);
+}
+.theme-head .num{
+  display:block; font-size:10.5px; font-weight:700; letter-spacing:.2em;
+  text-transform:uppercase; opacity:.85; margin-bottom:6px;
+}
+.theme-head h3{
+  font-family:var(--font-display); font-weight:700;
+  font-size:17px; line-height:1.25; margin:0;
+}
+
+.block{
+  background:var(--card); border:1px solid var(--rule); border-radius:var(--radius);
+  box-shadow:var(--shadow); border-top:3px solid var(--accent);
+  padding:14px 16px 15px;
+}
+.stub{ display:contents; }
+.block .label{ display:block; text-align:center; color:var(--accent-text,var(--accent)); margin-bottom:4px; }
+.block .sublabel{ text-align:center; font-size:11.5px; color:var(--ink-mute); margin-bottom:11px; }
+
+/* Bulleted item lists inside theme blocks */
+.items{ margin:0; padding:0; list-style:none; }
+.items li{
+  position:relative; padding:7px 0 7px 15px; font-size:13.2px; line-height:1.45;
+  color:var(--ink-soft); border-bottom:1px solid #f2ece3;
+}
+.items li:last-child{ border-bottom:0; padding-bottom:0; }
+.items li::before{
+  content:""; position:absolute; left:0; top:14px;
+  width:5px; height:5px; border-radius:50%; background:var(--accent); opacity:.75;
+}
+.tag{
+  display:inline-block; font-weight:700; font-size:10px; letter-spacing:.09em;
+  text-transform:uppercase; padding:2px 7px; border-radius:999px;
+  background:var(--accent-wash); color:var(--accent-text,var(--accent));
+  margin-right:6px; vertical-align:1px; white-space:nowrap;
+}
+
+/* Placeholder rows for the blanks / "?" entries in the source doc */
+.items li.ph{ color:var(--ink-mute); font-style:italic; }
+.items li.ph::before{ background:transparent; border:1px dashed var(--ink-mute); width:6px; height:6px; top:13px; }
+
+/* 1-Year Intentions and the Quarterly plan sit below a break, as in the
+   original canvas — no fill, just a little air above them. */
+.block.intentions{ margin-top:14px; }
+.block.intentions .items li{ color:var(--ink); font-weight:500; }
+
+/* Quarterly release plan */
+.quarters{ margin:0; padding:0; list-style:none; }
+.quarters li{ padding:0 0 10px; }
+.quarters .q{
+  font-weight:700; font-size:10.5px; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--ink); display:block; margin-bottom:4px;
+}
+.quarters .fill{
+  display:block; min-height:19px; border-bottom:1px dashed var(--rule);
+  font-size:13px; color:var(--ink-soft);
+}
+
+/* ============================================================
+   ROW VIEW — each theme becomes one full-width horizontal table,
+   stacked down the page. Toggled by the Columns / Rows control.
+   ============================================================ */
+body.view-rows .themes{
+  display:block;
+  grid-template-columns:none;
+  grid-template-rows:none;
+}
+body.view-rows .theme{
+  display:block;
+  grid-row:auto;
+  grid-template-rows:none;
+  grid-template-columns:none;
+  gap:0;
+  margin-bottom:38px;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  overflow:visible;
+}
+body.view-rows .theme:last-child{ margin-bottom:0; }
+
+/* Full-width banner across the top of the table */
+body.view-rows .theme-head{
+  border-radius:var(--radius) var(--radius) 0 0; box-shadow:none;
+  display:flex; align-items:baseline; gap:16px; flex-wrap:wrap;
+  text-align:left; padding:12px 20px 13px;
+}
+body.view-rows .theme-head .num{
+  margin:0; opacity:.9; white-space:nowrap;
+  padding-right:16px; border-right:1px solid currentColor;
+}
+body.view-rows .theme-head h3{ font-size:19px; }
+
+/* Each section is one full-width row: stub heading at left, content at right */
+body.view-rows .theme .block{
+  display:grid;
+  grid-template-columns:200px minmax(0,1fr);
+  column-gap:26px;
+  align-items:start;
+  border:1px solid var(--rule); border-bottom:0;
+  border-radius:0; box-shadow:none;
+  padding:16px 22px 18px;
+  background:var(--card);
+}
+
+/* The break: Intentions + Quarterly detach into a second panel below the
+   main table, echoing the gap in the original canvas. */
+body.view-rows .theme .block.intentions{
+  margin-top:20px;
+  border-top:3px solid var(--accent);
+  border-radius:var(--radius) var(--radius) 0 0;
+}
+body.view-rows .theme .block:has(+ .block.intentions),
+body.view-rows .theme .block:last-child{
+  border-bottom:1px solid var(--rule);
+  border-radius:0 0 var(--radius) var(--radius);
+}
+
+/* .stub is display:contents in column view, so it only becomes a real
+   left-hand heading cell here. */
+body.view-rows .theme .stub{ display:block; grid-column:1; grid-row:1; }
+body.view-rows .theme .block .label{
+  text-align:left; margin-bottom:5px;
+  color:var(--accent-text,var(--accent));
+  font-size:12px;
+}
+body.view-rows .theme .block .sublabel{
+  text-align:left; font-size:11.5px; color:var(--ink-mute); margin-bottom:0;
+}
+body.view-rows .theme .block > .items,
+body.view-rows .theme .block > .quarters{
+  grid-column:2; grid-row:1;
+  border-left:1px solid var(--rule); padding-left:26px;
+}
+
+/* Content flows across the full width — as many ~330px tracks as will fit */
+body.view-rows .items{ columns:330px; column-gap:34px; }
+body.view-rows .items li{ break-inside:avoid; font-size:13.4px; }
+body.view-rows .items li:last-child{ padding-bottom:7px; }
+
+/* The five quarters sit side by side across the row */
+body.view-rows .quarters{
+  display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:0 22px;
+}
+body.view-rows .quarters li{ padding-bottom:0; }
+body.view-rows .quarters .fill{ min-height:34px; }
+
+@media (max-width:860px){
+  body.view-rows .theme .block{ grid-template-columns:minmax(0,1fr); }
+  body.view-rows .theme .stub{ grid-column:1; grid-row:1; margin-bottom:10px; }
+  body.view-rows .theme .block > .items,
+  body.view-rows .theme .block > .quarters{
+    grid-column:1; grid-row:2; border-left:0; padding-left:0;
+  }
+  body.view-rows .quarters{ grid-template-columns:1fr 1fr; }
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.colophon{
+  margin-top:48px; padding-top:20px; border-top:1px solid var(--rule);
+  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  font-size:11.5px; color:var(--ink-mute); letter-spacing:.04em;
+}
+.swatches{ display:flex; gap:5px; align-items:center; }
+.swatches i{ width:13px; height:13px; border-radius:50%; display:block; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:1200px){
+  .themes{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:860px){
+  .canvas{ padding:0 18px; }
+  .themes{ grid-template-columns:1fr; }
+  .mission-grid{ grid-template-columns:1fr; }
+  .bracket{ display:none; }
+  .scorecard ul{ columns:1; }
+  .roof{ width:100%; }
+}
+
+/* ============================================================
+   PRINT / PDF
+   ============================================================ */
+@media print{
+  @page{ size:1400px 2400px; margin:14mm; }
+  body{ background:#fff; padding-bottom:0; font-size:10.5px; }
+  .toolbar{ display:none !important; }
+  .canvas{ max-width:none; padding:0; }
+  .card,.block,.theme-head{ box-shadow:none; }
+  .theme,.block,.mission-grid .card,.scorecard{ break-inside:avoid; }
+  body:not(.view-rows) .themes{ grid-template-columns:repeat(4,minmax(0,1fr)); }
+  body.view-rows .theme{ page-break-inside:avoid; }
+  .masthead{ padding-top:0; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============ TOOLBAR (screen only) ============ -->
+<div class="toolbar no-print">
+  <div class="toolbar-inner">
+    <div class="brandmark">Concord Consortium <span>·</span> Adaptive Plan</div>
+    <span class="hint" id="hint">Edit mode lets you type directly into any field. Changes are live only — print to PDF to keep them.</span>
+    <div class="segmented" role="group" aria-label="Strategic themes layout">
+      <button class="btn seg" id="viewCols" aria-pressed="true">Columns</button>
+      <button class="btn seg" id="viewRows" aria-pressed="false">Rows</button>
+    </div>
+    <button class="btn" id="editBtn" aria-pressed="false">Edit mode</button>
+    <button class="btn" id="printBtn">Print / PDF</button>
+  </div>
+</div>
+
+<div class="canvas">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <div class="org" data-edit contenteditable="false">The Concord Consortium</div>
+    <h1 data-edit contenteditable="false">The Adaptive Planning Canvas</h1>
+    <div class="meta" data-edit contenteditable="false">Fiscal Year 2027 &middot; Draft of August 7, 2026</div>
+  </header>
+
+  <!-- ============ CREED + VISION ============ -->
+  <section class="house">
+    <div class="roof">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <polygon points="0,100 50,0 100,100"></polygon>
+      </svg>
+      <div class="roof-content">
+        <div class="label">Creed</div>
+        <div class="creed-text" data-edit contenteditable="false">Good STEM learning is practice for leading a good life</div>
+      </div>
+    </div>
+    <div class="card vision">
+      <div class="label">Vision</div>
+      <p data-edit contenteditable="false">We envision a world where all students and teachers use effective digital resources to engage deeply, justly, and equitably with STEM concepts and practices in varied personal, cultural, and social contexts.</p>
+    </div>
+  </section>
+
+  <!-- ============ 3-YEAR MISSION ============ -->
+  <section>
+    <div class="mission-head">
+      <div class="label">Three-Year Mission</div>
+      <div class="bracket" aria-hidden="true"></div>
+    </div>
+    <div class="mission-grid">
+      <div class="card">
+        <div class="label">Commercial Position</div>
+        <p data-edit contenteditable="false">A short-list provider of top simulations and tools for high-quality STEM learning experiences</p>
+      </div>
+      <div class="card">
+        <div class="label">Customer Purpose</div>
+        <p data-edit contenteditable="false">The friendly, amazing guide for exploring STEM topics and creating &ldquo;a-ha&rdquo; learning moments</p>
+      </div>
+      <div class="card">
+        <div class="label">Cultural Perception</div>
+        <p data-edit contenteditable="false">Technology used well is a critical component of effective STEM learning</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COMPANY SCORECARD ============ -->
+  <section class="card scorecard">
+    <div class="label">Company Scorecard</div>
+    <div class="sublabel">7&ndash;10 key metrics that assess progress toward the three-year mission</div>
+    <ul data-edit contenteditable="false">
+      <li>Bottom-line annual revenue</li>
+      <li>Revenue mix / proportions</li>
+      <li>Number of B2B clients</li>
+      <li>Revenue from B2B work</li>
+      <li>Number of publications</li>
+      <li>Number of &ldquo;project translations&rdquo; &mdash; traceable outputs from project work into client implementations</li>
+      <li>Number of repeats / referrals <em>(to confirm)</em></li>
+      <li>Average size of business engagement</li>
+      <li>Number of significant non-federal funders</li>
+      <li class="ph">Add metric</li>
+    </ul>
+  </section>
+
+  <!-- ============ STRATEGIC THEMES ============ -->
+  <section>
+    <div class="themes-head">
+      <div class="label">Strategic Themes</div>
+      <div class="sublabel">How the three-year mission is realized across four strategic fields of play &mdash; each with its own working hypotheses, ongoing upkeep, backlog of bets, and one-year intentions.</div>
+    </div>
+
+    <div class="themes">
+
+      <!-- ---------- THEME 1 ---------- -->
+      <article class="theme" style="--accent:#e86e2f; --accent-ink:#fff; --accent-text:#b55414; --accent-wash:#fdeade;">
+        <div class="theme-head">
+          <span class="num">Theme #1</span>
+          <h3 data-edit contenteditable="false">Successful B2B Service Engagements</h3>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Iterative Hypotheses</div>
+            <div class="sublabel">Key indicators, conditions, models, causation, strategic trade-offs</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li><span class="tag">Assumption</span>Providers desire to make interactive content and are willing to pay for it</li>
+            <li><span class="tag">Assumption</span>Providers value interactive content that is of high pedagogical quality, and can discriminate among levels of quality</li>
+            <li><span class="tag">Indicator</span>Conversations with potential clients regularly lead to follow-up calls that include demos and concrete suggestions for creation and/or integration</li>
+            <li><span class="tag">Indicator</span>Conversations lead to concrete, paid &ldquo;first pancake&rdquo; projects with outcomes that satisfy both parties</li>
+            <li><span class="tag">Expectation</span>Our simulations are likely to be the point of obvious contact and engagement for most providers, and integrations are likely to be light touch</li>
+            <li><span class="tag">Expectation</span>A small number of providers will understand and be interested in our tools or broader integration on initial conversation. However, as relationships with other providers progress, a meaningful fraction will begin to understand the value of these additional options</li>
+            <li><span class="tag">Model</span>Most of our contracts are likely to involve a mix of modification of existing simulations (modified 10&ndash;20% from the existing base) and creation of new simulations (created with ~75% new code based on existing engines / infrastructure)</li>
+            <li><span class="tag">Assumption</span>We will need to monitor the landscape for implications of blowback against screen-time exposure and create advocacy options to emphasize the critical importance of &ldquo;quality screen time&rdquo; for STEM learning</li>
+            <li class="ph">Add hypothesis</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Upkeep Efforts</div>
+            <div class="sublabel">&ldquo;Keep the lights on&rdquo; work</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>Regular influx of meetings with new prospects</li>
+            <li>Regular update connections with existing clients</li>
+            <li>Steady, reliable management of development for client engagements</li>
+            <li>Regular monitoring of pipeline against goals and check-ins with Matt</li>
+            <li>Adjusting messaging and outreach; iteratively developing and improving marketing materials and approaches</li>
+            <li class="ph">Add effort</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Bet Backlog</div>
+            <div class="sublabel">New and/or uncertain activities</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>Development of AI-based innovations, frameworks, and approaches that augment our existing work</li>
+            <li>New partnerships with AI providers / startups (e.g. Forever Learning, Fermi)</li>
+            <li>Development of coherent, modular frameworks and architectures to support a full variety of STEM learning experiences</li>
+            <li>Development of integration infrastructure (LTI, cross-talk, embedding capabilities)</li>
+            <li>Improvement / development of logging and assessment capabilities</li>
+            <li class="ph">Add bet</li>
+          </ul>
+        </div>
+
+        <div class="block intentions">
+          <div class="stub">
+            <div class="label">One-Year Intentions</div>
+            <div class="sublabel">Including key metrics &middot; by Oct. 1, 2027</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>Bring in and consume <strong>$1M</strong> in new B2B revenue</li>
+            <li>Land <strong>six</strong> first-pancake engagements (~$25&ndash;$50K) with B2B clients</li>
+            <li>Land and complete <strong>three</strong> full B2B engagements (~$200&ndash;$500K) that leave clients satisfied</li>
+            <li>Establish one or more synergistic AI-related partnerships</li>
+            <li>Develop <strong>three</strong> key showcase-able AI capabilities or features viable for use with B2B clients</li>
+            <li class="ph">Add intention</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Quarterly Release Plan</div>
+          </div>
+          <ul class="quarters" data-edit contenteditable="false">
+            <li><span class="q">July&ndash;Sept. 2026</span><span class="fill"></span></li>
+            <li><span class="q">Oct.&ndash;Dec. 2026</span><span class="fill"></span></li>
+            <li><span class="q">Jan.&ndash;Mar. 2027</span><span class="fill"></span></li>
+            <li><span class="q">Apr.&ndash;June 2027</span><span class="fill"></span></li>
+            <li><span class="q">July&ndash;Sept. 2027</span><span class="fill"></span></li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- ---------- THEME 2 ---------- -->
+      <article class="theme" style="--accent:#0093b0; --accent-ink:#fff; --accent-text:#00708a; --accent-wash:#e0f3f7;">
+        <div class="theme-head">
+          <span class="num">Theme #2</span>
+          <h3 data-edit contenteditable="false">Sustaining Key Products</h3>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Iterative Hypotheses</div>
+            <div class="sublabel">Key indicators, conditions, models, causation, strategic trade-offs</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li><span class="tag">Assumption</span>Our independent / stand-alone products or platforms hold revenue-generating capability</li>
+            <li><span class="tag">Assumption</span>Revenue generation around these products will involve more diverse business models than those for our standard B2B work</li>
+            <li><span class="tag">Indicator</span>We are able to frame independent value propositions for these products as discrete entities that resonate with others external to the organization</li>
+            <li><span class="tag">Indicator</span>We can identify both distinguishable user bases and revenue-generating bases for these products</li>
+            <li><span class="tag">Trade-off</span>Plausible paths for revenue generation may involve activities of a different nature than our B2B model and work (e.g., direct sales or district-based contracts); we will need to consider the ramifications of following these through, including the potential need for new or different partnerships</li>
+            <li><span class="tag">Model</span>Revenue involving these products may have overlap with our B2B work; these needs may generate pressures that conflict with product-based development</li>
+            <li><span class="tag">Trade-off</span>Work to define and develop these products and their value propositions is distinct from work on cultivating and evolving our B2B model, and the needed capacity is different as well; work in this direction holds an opportunity-cost trade-off</li>
+            <li class="ph">Add hypothesis</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Upkeep Efforts</div>
+            <div class="sublabel">&ldquo;Keep the lights on&rdquo; work</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>User discovery / value proposition work</li>
+            <li>Maintenance of existing user communities and showcase resources</li>
+            <li>Ongoing progress along product development pipeline</li>
+            <li class="ph">Add effort</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Bet Backlog</div>
+            <div class="sublabel">New and/or uncertain activities</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>Developing showcase resources / exemplars</li>
+            <li>Creation of key examples or frameworks to support integration, potentially on spec</li>
+            <li>Experiments with district needs assessments and relationships</li>
+            <li class="ph">Add bet</li>
+          </ul>
+        </div>
+
+        <div class="block intentions">
+          <div class="stub">
+            <div class="label">One-Year Intentions</div>
+            <div class="sublabel">Including key metrics</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>Agreed-on list of the distinct products we aim to pursue</li>
+            <li>Outputs from full user discovery sessions for each</li>
+            <li>Proposed models and hypothetical (or better) value propositions for each</li>
+            <li>Predictions of market / revenue potential, including proportional portfolio across expected sources and audiences</li>
+            <li class="ph">Add intention</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Quarterly Release Plan</div>
+          </div>
+          <ul class="quarters" data-edit contenteditable="false">
+            <li><span class="q">July&ndash;Sept. 2026</span><span class="fill"></span></li>
+            <li><span class="q">Oct.&ndash;Dec. 2026</span><span class="fill"></span></li>
+            <li><span class="q">Jan.&ndash;Mar. 2027</span><span class="fill"></span></li>
+            <li><span class="q">Apr.&ndash;June 2027</span><span class="fill"></span></li>
+            <li><span class="q">July&ndash;Sept. 2027</span><span class="fill"></span></li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- ---------- THEME 3 ---------- -->
+      <article class="theme" style="--accent:#2da343; --accent-ink:#fff; --accent-text:#1f7c31; --accent-wash:#e3f4e6;">
+        <div class="theme-head">
+          <span class="num">Theme #3</span>
+          <h3 data-edit contenteditable="false">Deploying NSF / Federal Funding as an Applied Innovation Engine</h3>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Iterative Hypotheses</div>
+            <div class="sublabel">Key indicators, conditions, models, causation, strategic trade-offs</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li><span class="tag">Assumption</span>NSF funding will continue to be a viable source of revenue for innovative proposals</li>
+            <li><span class="tag">Assumption</span>We can single out strategic aspects of the infrastructure we deem essential to furthering our B2B and Product work and can build and test them as part of the work of awarded NSF projects</li>
+            <li><span class="tag">Assumption</span>The research conducted in NSF projects can be leveraged as an asset for reliability, effectiveness, and credibility of our infrastructure / products and the expertise provided in our B2B services</li>
+            <li><span class="tag">Indicator</span>We can visibly trace selected elements of our grander vision and infrastructure into ongoing NSF-sponsored projects</li>
+            <li><span class="tag">Indicator</span>We can visibly trace trajectories in which products and infrastructure elements cultivated in NSF projects become incorporated into B2B and Product work</li>
+            <li><span class="tag">Trade-off</span>NSF work and research often involves inherently lengthy timelines that may slow the development of budding / promising innovations</li>
+            <li><span class="tag">Trade-off</span>NSF work represents an opportunity cost against B2B and product-facing revenue activity; work across the organization needs to balance these arms consciously and strategically</li>
+            <li class="ph">Add hypothesis</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Upkeep Efforts</div>
+            <div class="sublabel">&ldquo;Keep the lights on&rdquo; work</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>Regular, ongoing NSF / federal proposal development and submission</li>
+            <li>Conducting the regular work of projects satisfactorily, including project cycles and reporting</li>
+            <li>Remaining engaged with colleague collaborators as part of project work</li>
+            <li>Producing, publishing, and presenting research and regularly networking with colleagues, the larger research community, and NSF and federal funding representatives</li>
+            <li class="ph">Add effort</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Bet Backlog</div>
+            <div class="sublabel">New and/or uncertain activities</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>Participation in new and/or unfamiliar federal funding programs (e.g., different NSF directorates, different agencies &mdash; Dept. of Labor, IES, DoW)</li>
+            <li>Employing explicit, strategic planning and internal gating of proposal development to ensure alignment with greater organizational needs</li>
+            <li>New forms of research (e.g., large-scale RCTs, evaluation) that reinforce our B2B and Product activities</li>
+            <li class="ph">Add bet</li>
+          </ul>
+        </div>
+
+        <div class="block intentions">
+          <div class="stub">
+            <div class="label">One-Year Intentions</div>
+            <div class="sublabel">Including key metrics</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>Create an organization-wide &ldquo;big board&rdquo; of infrastructure and capacity needs, visible to and understood by all members of the organization, by <strong>Oct. 1, 2026</strong></li>
+            <li>Enact a process for proposal development that explicitly aligns individual proposals to one or more identified needs from the &ldquo;big board&rdquo; by <strong>Nov. 1, 2026</strong></li>
+            <li>Ensure that each PI / writer submits <strong>two or more</strong> NSF / federal proposals in FY27, with at least one of the two submitted by <strong>Dec. 31, 2026</strong></li>
+            <li class="ph">Add intention</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Quarterly Release Plan</div>
+          </div>
+          <ul class="quarters" data-edit contenteditable="false">
+            <li><span class="q">July&ndash;Sept. 2026</span><span class="fill"></span></li>
+            <li><span class="q">Oct.&ndash;Dec. 2026</span><span class="fill"></span></li>
+            <li><span class="q">Jan.&ndash;Mar. 2027</span><span class="fill"></span></li>
+            <li><span class="q">Apr.&ndash;June 2027</span><span class="fill"></span></li>
+            <li><span class="q">July&ndash;Sept. 2027</span><span class="fill"></span></li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- ---------- THEME 4 ---------- -->
+      <article class="theme" style="--accent:#ffc222; --accent-ink:#3d2c05; --accent-text:#9a6f05; --accent-wash:#fff3d6;">
+        <div class="theme-head">
+          <span class="num">Theme #4</span>
+          <h3 data-edit contenteditable="false">Securing Private Revenue as a Flexibility Enabler</h3>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Iterative Hypotheses</div>
+            <div class="sublabel">Key indicators, conditions, models, causation, strategic trade-offs</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li><span class="tag">Assumption</span>We are able to cast our work across the organization successfully into themes that transcend individual projects and are understandable by and attractive to external private funders</li>
+            <li><span class="tag">Assumption</span>We can enact and support high-quality, ongoing networking and referral activity at a level sufficient to open doors with a large number of funders across types and sectors</li>
+            <li><span class="tag">Indicator</span>At least 30% of our private funding conversations involve representatives from industry and private companies</li>
+            <li><span class="tag">Indicator</span>Multiple private funders invite us to submit proposals of six figures or greater</li>
+            <li><span class="tag">Conditions</span>We cast our work successfully in ways that match current funders' interests and priorities, including new directions such as pathways and workforce development</li>
+            <li><span class="tag">Trade-off</span>Work developing relationships can be a slow-payoff investment and involves short-term opportunity cost</li>
+            <li><span class="tag">Trade-off</span>Identifying and remaining attractive to funders can pose the potential of mission creep; on the other hand, investigating new activities and directions may at times be necessary or even desirable &mdash; regular reflection and re-inspection is essential to remain mission aligned and keep these trade-offs in check</li>
+            <li class="ph">Add hypothesis</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Upkeep Efforts</div>
+            <div class="sublabel">&ldquo;Keep the lights on&rdquo; work</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>Regular, repeated conversations and correspondence with funder representatives</li>
+            <li>Ongoing development and refinement of case statements for overall organization and organizational themes of work</li>
+            <li>Upkeep of reporting and connection, including forwarding of successes and &ldquo;marketing&rdquo; information to continually maintain reputation and funder awareness</li>
+            <li>Continual solicitation of connections across all sources, from Board to staff to collaborators and partners</li>
+            <li>Regular development and refining of case statements, briefings, and proposal materials to maintain funder interaction and evolve relationships</li>
+            <li>Cognizance and regular evaluation of released solicitations, competitions, and proposal opportunities from private funders</li>
+            <li class="ph">Add effort</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Bet Backlog</div>
+            <div class="sublabel">New and/or uncertain activities</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>Submission of bids and vendor paperwork for listing on rosters of state agencies</li>
+            <li>Cultivating relationships with state and federal lawmakers / representatives</li>
+            <li>Maintaining awareness of potential for individual / major giving as a funding source</li>
+            <li class="ph">Add bet</li>
+          </ul>
+        </div>
+
+        <div class="block intentions">
+          <div class="stub">
+            <div class="label">One-Year Intentions</div>
+            <div class="sublabel">Including key metrics</div>
+          </div>
+          <ul class="items" data-edit contenteditable="false">
+            <li>Secure <strong>$750K&ndash;$1M</strong> in new private funding by <strong>Sept. 30, 2027</strong></li>
+            <li>Receive invitations for proposal submission from <strong>12&ndash;15</strong> different private funders</li>
+            <li>Hold conversations with over <strong>25</strong> distinct potential private funders across foundations and industry by <strong>Sept. 30, 2027</strong></li>
+            <li class="ph">Add intention</li>
+          </ul>
+        </div>
+
+        <div class="block">
+          <div class="stub">
+            <div class="label">Quarterly Release Plan</div>
+          </div>
+          <ul class="quarters" data-edit contenteditable="false">
+            <li><span class="q">July&ndash;Sept. 2026</span><span class="fill"></span></li>
+            <li><span class="q">Oct.&ndash;Dec. 2026</span><span class="fill"></span></li>
+            <li><span class="q">Jan.&ndash;Mar. 2027</span><span class="fill"></span></li>
+            <li><span class="q">Apr.&ndash;June 2027</span><span class="fill"></span></li>
+            <li><span class="q">July&ndash;Sept. 2027</span><span class="fill"></span></li>
+          </ul>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ COLOPHON ============ -->
+  <footer class="colophon">
+    <div>The Concord Consortium &middot; Adaptive Planning Canvas &middot; structure after NOBL Collective</div>
+    <div class="swatches" aria-label="Concord Consortium brand palette">
+      <i style="background:#e86e2f"></i><i style="background:#6ec4d7"></i><i style="background:#0093b0"></i>
+      <i style="background:#2da343"></i><i style="background:#ffc222"></i><i style="background:#c9e9e6"></i>
+      <i style="background:#ffe4af"></i><i style="background:#f6ecdc;border:1px solid #ddcfbe"></i><i style="background:#b55414"></i>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var editBtn = document.getElementById('editBtn');
+  var printBtn = document.getElementById('printBtn');
+  var editing = false;
+
+  editBtn.addEventListener('click', function(){
+    editing = !editing;
+    document.body.classList.toggle('editing', editing);
+    editBtn.setAttribute('aria-pressed', String(editing));
+    editBtn.textContent = editing ? 'Editing on' : 'Edit mode';
+    document.querySelectorAll('[data-edit]').forEach(function(el){
+      el.setAttribute('contenteditable', editing ? 'true' : 'false');
+    });
+  });
+
+  printBtn.addEventListener('click', function(){ window.print(); });
+
+  // ---- Layout toggle: four parallel columns  <->  full-width stacked tables ----
+  var viewCols = document.getElementById('viewCols');
+  var viewRows = document.getElementById('viewRows');
+  function setView(rows){
+    document.body.classList.toggle('view-rows', rows);
+    viewRows.setAttribute('aria-pressed', String(rows));
+    viewCols.setAttribute('aria-pressed', String(!rows));
+  }
+  viewCols.addEventListener('click', function(){ setView(false); });
+  viewRows.addEventListener('click', function(){ setView(true); });
+
+  // In edit mode, Enter inside a list creates a new sibling item rather than a stray div.
+  document.addEventListener('keydown', function(e){
+    if(!editing || e.key !== 'Enter' || e.shiftKey) return;
+    var li = e.target && e.target.closest ? null : null;
+    var sel = window.getSelection();
+    if(!sel || !sel.anchorNode) return;
+    var node = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentNode;
+    li = node.closest('li');
+    if(!li || !li.parentNode.classList.contains('items')) return;
+    e.preventDefault();
+    var fresh = document.createElement('li');
+    fresh.textContent = ' ';
+    li.parentNode.insertBefore(fresh, li.nextSibling);
+    var r = document.createRange();
+    r.selectNodeContents(fresh);
+    r.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r);
+  });
+})();
+</script>
+
+</body>
+</html>
